@@ -1,0 +1,82 @@
+name: Simple CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  # -------------------------------------------------------------
+  # STAGE 1: Test the code
+  # -------------------------------------------------------------
+  test:
+    name: 🧪 Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Test
+        run: npm test
+
+  # -------------------------------------------------------------
+  # STAGE 2: Build & Push Docker Image to Docker Hub
+  # -------------------------------------------------------------
+  build-and-push:
+    name: 🐳 Build & Push Docker Image
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/simple-cloud-app:latest
+
+  # -------------------------------------------------------------
+  # STAGE 3: Deploy to Kubernetes
+  # -------------------------------------------------------------
+  deploy:
+    name: ☸️ Deploy to Kubernetes
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure Kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Deploy to Kubernetes Cluster
+        run: |
+          sed -i "s|DOCKERHUB_USERNAME|${{ secrets.DOCKERHUB_USERNAME }}|g" k8s/deployment.yaml
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+          kubectl rollout restart deployment/simple-cloud-app
+          kubectl rollout status deployment/simple-cloud-app --timeout=120s
