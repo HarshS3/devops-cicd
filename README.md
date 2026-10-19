@@ -1,6 +1,6 @@
 # ☸️ Cloud-Native CI/CD Pipeline (GitHub, Docker & Kubernetes)
 
-A complete **Continuous Integration & Continuous Deployment (CI/CD)** pipeline for a cloud-native application using **GitHub**, **GitHub Actions**, **Docker**, **Docker Hub**, and **Kubernetes**.
+A complete **Continuous Integration & Continuous Deployment (CI/CD)** pipeline for a cloud-native application using **GitHub**, **GitHub Actions**, **Docker**, **Docker Hub**, and **Kubernetes** prac.
 
 ---
 

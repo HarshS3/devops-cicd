@@ -91,7 +91,7 @@ app.get('/health', (req, res) => {
 
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`Application running on http://localhost:${PORT}`);
+    console.log(`Application running on http://localhost:${PORT} smoothly`);
   });
 }
 
