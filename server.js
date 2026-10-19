@@ -67,7 +67,7 @@ app.get('/', (req, res) => {
       <div class="card">
         <span class="badge">● DEPLOYMENT ACTIVE</span>
         <h1>Cloud-Native CI/CD Pipeline</h1>
-        <p>Deployed successfully with GitHub Actions, Docker Hub, and Kubernetes!</p>
+        <p>Deployed successfully with GitHub Actions, Docker Hub, and Kubernetes! Updated Rollout</p>
         <div class="info-grid">
           <div class="info-row"><span class="label">App Version:</span><span>v${APP_VERSION}</span></div>
           <div class="info-row"><span class="label">Container Host:</span><span>${os.hostname()}</span></div>
