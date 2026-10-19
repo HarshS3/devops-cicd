@@ -1,6 +1,6 @@
 # 🐳 Simple Docker CI/CD Pipeline
 
-A lightweight, minimal **Continuous Integration and Continuous Deployment (CI/CD)** pipeline using **GitHub**, **GitHub Actions**, **Docker**, and **Docker Hub** for devops.
+A lightweight, minimal **Continuous Integration and Continuous Deployment (CI/CD)** pipeline using **GitHub**, **GitHub Actions**, **Docker**, and **Docker Hub** for devops 10th.
 
 ---
 
