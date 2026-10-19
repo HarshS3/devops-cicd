@@ -4,6 +4,11 @@ on:
   push:
     branches: [ "main", "master" ]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Docker image tag'
+        required: false
+        default: 'latest'
 
 jobs:
   # -------------------------------------------------------------
@@ -53,7 +58,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/simple-cloud-app:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/simple-cloud-app:${{ github.event.inputs.tag || 'latest' }}
             ${{ secrets.DOCKERHUB_USERNAME }}/simple-cloud-app:sha-${{ github.sha }}
 
   # -------------------------------------------------------------
@@ -66,11 +71,11 @@ jobs:
     steps:
       - name: Pull Image from Docker Hub
         run: |
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/simple-cloud-app:latest
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/simple-cloud-app:${{ github.event.inputs.tag || 'latest' }}
 
       - name: Run Container Locally
         run: |
-          docker run -d --name test-app -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/simple-cloud-app:latest
+          docker run -d --name test-app -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/simple-cloud-app:${{ github.event.inputs.tag || 'latest' }}
           sleep 5
 
       - name: Verify Container Health Endpoint
