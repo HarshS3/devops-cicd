@@ -1,4 +1,4 @@
-name: Docker CI/CD Pipeline
+name: Cloud-Native CI/CD Pipeline (Docker & Kubernetes)
 
 on:
   push:
@@ -11,9 +11,9 @@ on:
         default: 'latest'
 
 jobs:
-  # -------------------------------------------------------------
+  # =============================================================
   # STAGE 1: Code Verification & Automated Testing
-  # -------------------------------------------------------------
+  # =============================================================
   test:
     name: 🧪 Run Automated Tests
     runs-on: ubuntu-latest
@@ -32,9 +32,9 @@ jobs:
       - name: Run Test Suite
         run: npm test
 
-  # -------------------------------------------------------------
+  # =============================================================
   # STAGE 2: Docker Build & Push to Docker Hub
-  # -------------------------------------------------------------
+  # =============================================================
   build-and-push:
     name: 🐳 Docker Build & Push
     needs: test
@@ -61,25 +61,34 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/simple-cloud-app:${{ github.event.inputs.tag || 'latest' }}
             ${{ secrets.DOCKERHUB_USERNAME }}/simple-cloud-app:sha-${{ github.sha }}
 
-  # -------------------------------------------------------------
-  # STAGE 3: Pull & Verify Deployed Docker Container
-  # -------------------------------------------------------------
-  verify-container:
-    name: 🚀 Verify Docker Container
+  # =============================================================
+  # STAGE 3: Continuous Deployment (CD) to Kubernetes
+  # =============================================================
+  deploy-to-kubernetes:
+    name: ☸️ Deploy to Kubernetes
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - name: Pull Image from Docker Hub
-        run: |
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/simple-cloud-app:${{ github.event.inputs.tag || 'latest' }}
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Run Container Locally
-        run: |
-          docker run -d --name test-app -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/simple-cloud-app:${{ github.event.inputs.tag || 'latest' }}
-          sleep 5
+      - name: Spin up Kubernetes Cluster (KinD)
+        uses: helm/kind-action@v1.8.0
+        with:
+          cluster_name: cicd-k8s-cluster
 
-      - name: Verify Container Health Endpoint
+      - name: Deploy Kubernetes Manifests
         run: |
-          curl --fail http://localhost:8080/health || exit 1
-          echo "Docker container is running and healthy!"
-          docker logs test-app
+          echo "Updating deployment with image: ${{ secrets.DOCKERHUB_USERNAME }}/simple-cloud-app:${{ github.event.inputs.tag || 'latest' }}"
+          sed -i "s|DOCKERHUB_USERNAME|${{ secrets.DOCKERHUB_USERNAME }}|g" k8s/deployment.yaml
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+
+      - name: Verify Kubernetes Deployment & Pods
+        run: |
+          echo "Checking rolling update status..."
+          kubectl rollout status deployment/cloud-native-app --timeout=120s
+          echo "=== KUBERNETES PODS ==="
+          kubectl get pods -o wide
+          echo "=== KUBERNETES SERVICES ==="
+          kubectl get services -o wide
